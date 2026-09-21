@@ -13,15 +13,13 @@ Quando publicar uma nova versão, incremente `@version` no cabeçalho e envie o 
 
 ## Greasy Fork e sincronização
 
-O Greasy Fork reescreve os campos `@updateURL` e `@downloadURL` de scripts publicados para que apontem ao próprio Greasy Fork. Portanto, publicar como um script normal no Greasy Fork não mantém o GitHub como origem das atualizações.
+O Greasy Fork pode importar um userscript completo a partir de uma URL externa e sincronizar as mudanças dessa origem. Para este repositório:
 
-Para sincronizar código hospedado no GitHub:
+1. Importe `https://raw.githubusercontent.com/rodrigomescua/youtube-feed-cleaner/main/youtube-feed-cleaner.user.js` pela opção **Importar scripts** do Greasy Fork.
+2. Configure a sincronização automática ou acione a sincronização manual na página de edição do script.
+3. Incremente `@version` a cada release e envie as alterações para o GitHub. Confirme no Greasy Fork que a sincronização criou a versão esperada.
 
-1. No Greasy Fork, crie uma **biblioteca** (não um script comum) e informe a URL raw do arquivo acima como fonte externa/sincronizada.
-2. Use o fluxo de sincronização oferecido pelo Greasy Fork para buscar as novas versões do repositório.
-3. Confira cada versão importada na página do Greasy Fork antes de publicá-la aos usuários.
-
-Se a intenção for que os usuários instalem diretamente do Greasy Fork, publique um script comum lá e envie atualizações pelo editor do site; nesse modelo, o Greasy Fork é a fonte de atualização.
+O Greasy Fork fornece o endereço de instalação e as atualizações aos usuários. A importação sincroniza o código do script completo; não é necessário publicar uma biblioteca separada.
 
 ## Notas
 
