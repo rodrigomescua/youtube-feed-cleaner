@@ -2,7 +2,7 @@
 // @name         YouTube Feed Cleaner
 // @author       rodrigomescua
 // @namespace    https://github.com/rodrigomescua/youtube-feed-cleaner
-// @version      0.1.9
+// @version      0.1.10
 // @description  Gerencie termos e oculte vídeos correspondentes no feed de inscrições.
 // @homepageURL  https://github.com/rodrigomescua/youtube-feed-cleaner
 // @supportURL   https://github.com/rodrigomescua/youtube-feed-cleaner/issues
@@ -237,7 +237,8 @@
   }
 
   function titleAnchor(card) {
-    return card.querySelector(TITLE_SELECTOR)
+    return card.querySelector('h3 a[href*="/watch"]')
+      || card.querySelector(TITLE_SELECTOR)
       || [...card.querySelectorAll('a[href*="/watch"]')].find((anchor) => (anchor.getAttribute('title') || anchor.textContent || '').trim());
   }
 
