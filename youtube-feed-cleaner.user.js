@@ -2,7 +2,7 @@
 // @name         YouTube Feed Cleaner
 // @author       rodrigomescua
 // @namespace    https://github.com/rodrigomescua/youtube-feed-cleaner
-// @version      0.1.10
+// @version      0.1.11
 // @description  Gerencie termos e oculte vídeos correspondentes no feed de inscrições.
 // @homepageURL  https://github.com/rodrigomescua/youtube-feed-cleaner
 // @supportURL   https://github.com/rodrigomescua/youtube-feed-cleaner/issues
@@ -276,8 +276,8 @@
   }
 
   function menuItem(label) {
-    return [...document.querySelectorAll('ytd-menu-service-item-renderer, tp-yt-paper-listbox ytd-menu-service-item-renderer')]
-      .find((el) => normalize(el.innerText).includes(normalize(label)));
+    return [...document.querySelectorAll('[role="menuitem"], ytd-menu-service-item-renderer, tp-yt-paper-item')]
+      .find((el) => normalize(el.innerText || el.textContent).includes(normalize(label)));
   }
 
   async function hideVideo(card, id, manual = false) {
