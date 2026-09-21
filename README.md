@@ -25,4 +25,7 @@ O Greasy Fork fornece o endereço de instalação e as atualizações aos usuár
 
 - A interface do painel usa APIs seguras do DOM e funciona com Trusted Types estrito.
 - O modo de ocultação automática é experimental e vem desligado. A ação manual aparece nos vídeos correspondentes.
+- O painel mantém um histórico local dos últimos 100 vídeos ocultados automaticamente; ações manuais não entram nesse histórico.
+- É possível ocultar visualmente as seções Shorts e Mais relevantes no feed de inscrições; essa opção não aciona “Não tenho interesse”.
+- O painel mostra avisos para alterações nos termos, opções, histórico e resultado das ações de ocultação.
 - O script depende dos seletores da interface web do YouTube e pode precisar de ajustes quando a página mudar.
