@@ -2,7 +2,7 @@
 // @name         YouTube Feed Cleaner
 // @author       rodrigomescua
 // @namespace    https://github.com/rodrigomescua/youtube-feed-cleaner
-// @version      0.1.8
+// @version      0.1.9
 // @description  Gerencie termos e oculte vídeos correspondentes no feed de inscrições.
 // @homepageURL  https://github.com/rodrigomescua/youtube-feed-cleaner
 // @supportURL   https://github.com/rodrigomescua/youtube-feed-cleaner/issues
@@ -246,6 +246,25 @@
     return (title?.getAttribute('title') || title?.textContent || '').trim();
   }
 
+  function videoCards() {
+    const cards = new Set(document.querySelectorAll(VIDEO_SELECTOR));
+    document.querySelectorAll('h3').forEach((titleNode) => {
+      let card = titleNode.closest(VIDEO_SELECTOR);
+      if (!card) {
+        let ancestor = titleNode.parentElement;
+        while (ancestor && ancestor !== document.body) {
+          const hasVideoLink = [...ancestor.querySelectorAll('a[href*="/watch"]')]
+            .some((anchor) => (anchor.getAttribute('title') || anchor.textContent || '').trim());
+          const hasMenu = ancestor.querySelector('ytd-menu-renderer yt-icon-button, ytd-menu-renderer #button, button[aria-label*="More"], button[aria-label*="Ações"]');
+          if (hasVideoLink && hasMenu) { card = ancestor; break; }
+          ancestor = ancestor.parentElement;
+        }
+      }
+      if (card) cards.add(card);
+    });
+    return [...cards];
+  }
+
   function matchingTerm(title) {
     const haystack = normalize(title);
     return terms.find((term) => normalize(term) && haystack.includes(normalize(term)));
@@ -301,7 +320,7 @@
       scanTimer = 0;
       if (!onSubscriptions()) return;
       let matchCount = 0;
-      document.querySelectorAll(VIDEO_SELECTOR).forEach((card) => {
+      videoCards().forEach((card) => {
         const title = titleFor(card);
         const anchor = titleAnchor(card);
         const id = videoId(card, anchor);
