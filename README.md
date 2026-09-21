@@ -23,5 +23,6 @@ O Greasy Fork fornece o endereço de instalação e as atualizações aos usuár
 
 ## Notas
 
+- A interface do painel usa APIs seguras do DOM e funciona com Trusted Types estrito.
 - O modo de ocultação automática é experimental e vem desligado. A ação manual aparece nos vídeos correspondentes.
 - O script depende dos seletores da interface web do YouTube e pode precisar de ajustes quando a página mudar.

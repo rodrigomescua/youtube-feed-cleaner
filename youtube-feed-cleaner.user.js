@@ -2,7 +2,7 @@
 // @name         YouTube Feed Cleaner
 // @author       rodrigomescua
 // @namespace    https://github.com/rodrigomescua/youtube-feed-cleaner
-// @version      0.1.2
+// @version      0.1.3
 // @description  Gerencie termos e oculte vídeos correspondentes no feed de inscrições.
 // @homepageURL  https://github.com/rodrigomescua/youtube-feed-cleaner
 // @supportURL   https://github.com/rodrigomescua/youtube-feed-cleaner/issues
@@ -47,7 +47,6 @@
   let scanTimer = 0;
 
   const normalize = (s) => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase().trim();
-  const escapeHtml = (s) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
   const onSubscriptions = () => location.pathname.startsWith('/feed/subscriptions');
 
   function styles(root) {
@@ -86,20 +85,64 @@
   function renderPanel() {
     const panel = document.getElementById(HOST_ID)?.shadowRoot?.getElementById(PANEL_ID);
     if (!panel) return;
-    panel.innerHTML = `<div class="ytfc-head"><h2>Limpar feed</h2><button class="ytfc-icon" type="button" aria-label="Fechar">×</button></div>
-      <p class="ytfc-note">Adicione palavras ou frases para encontrar vídeos pelo título no feed de inscrições.</p>
-      <form class="ytfc-row"><input name="term" maxlength="100" placeholder="Ex.: spoilers, futebol" aria-label="Novo termo" required><button class="ytfc-add">Adicionar</button></form>
-      <div class="ytfc-switches"><label><input type="checkbox" name="enabled" ${enabled ? 'checked' : ''}> Ativar detecção</label><label><input type="checkbox" name="auto" ${autoHide ? 'checked' : ''}> Ocultar automaticamente (experimental)</label></div>
-      <ul class="ytfc-list">${terms.length ? terms.map((term, i) => `<li><span class="ytfc-term">${escapeHtml(term)}</span><button class="ytfc-remove" data-remove="${i}" type="button">Remover</button></li>`).join('') : '<li class="ytfc-term">Nenhum termo cadastrado ainda.</li>'}</ul>
-      <p class="ytfc-status">${onSubscriptions() ? 'Os títulos visíveis são analisados automaticamente.' : 'Abra youtube.com/feed/subscriptions para analisar o feed.'}</p>`;
-    panel.querySelector('.ytfc-icon').onclick = () => { panel.hidden = true; };
-    panel.querySelector('form').onsubmit = async (event) => {
-      event.preventDefault(); const input = panel.querySelector('input[name="term"]'); const value = input.value.trim();
-      if (value && !terms.some((term) => normalize(term) === normalize(value))) { terms.push(value); await set(STORE_TERMS, terms); renderPanel(); scan(); }
+    const make = (tag, className, text) => {
+      const element = document.createElement(tag);
+      if (className) element.className = className;
+      if (text !== undefined) element.textContent = text;
+      return element;
     };
-    panel.querySelectorAll('[data-remove]').forEach((button) => button.onclick = async () => { terms.splice(Number(button.dataset.remove), 1); await set(STORE_TERMS, terms); renderPanel(); scan(); });
-    panel.querySelector('input[name="enabled"]').onchange = async (event) => { enabled = event.target.checked; await set(STORE_ENABLED, enabled); scan(); };
-    panel.querySelector('input[name="auto"]').onchange = async (event) => { autoHide = event.target.checked; await set(STORE_AUTO, autoHide); scan(); };
+
+    const header = make('div', 'ytfc-head');
+    header.append(make('h2', '', 'Limpar feed'));
+    const close = make('button', 'ytfc-icon', '×');
+    close.type = 'button'; close.setAttribute('aria-label', 'Fechar');
+    close.onclick = () => { panel.hidden = true; };
+    header.append(close);
+
+    const note = make('p', 'ytfc-note', 'Adicione palavras ou frases para encontrar vídeos pelo título no feed de inscrições.');
+    const form = make('form', 'ytfc-row');
+    const termInput = make('input');
+    termInput.name = 'term'; termInput.maxLength = 100; termInput.placeholder = 'Ex.: spoilers, futebol';
+    termInput.setAttribute('aria-label', 'Novo termo'); termInput.required = true;
+    const add = make('button', 'ytfc-add', 'Adicionar'); add.type = 'submit';
+    form.append(termInput, add);
+    form.onsubmit = async (event) => {
+      event.preventDefault();
+      const value = termInput.value.trim();
+      if (value && !terms.some((term) => normalize(term) === normalize(value))) {
+        terms.push(value); await set(STORE_TERMS, terms); renderPanel(); scan();
+      }
+    };
+
+    const switches = make('div', 'ytfc-switches');
+    const enabledLabel = make('label');
+    const enabledInput = make('input'); enabledInput.type = 'checkbox'; enabledInput.name = 'enabled'; enabledInput.checked = enabled;
+    enabledInput.onchange = async () => { enabled = enabledInput.checked; await set(STORE_ENABLED, enabled); scan(); };
+    enabledLabel.append(enabledInput, document.createTextNode(' Ativar detecção'));
+    const autoLabel = make('label');
+    const autoInput = make('input'); autoInput.type = 'checkbox'; autoInput.name = 'auto'; autoInput.checked = autoHide;
+    autoInput.onchange = async () => { autoHide = autoInput.checked; await set(STORE_AUTO, autoHide); scan(); };
+    autoLabel.append(autoInput, document.createTextNode(' Ocultar automaticamente (experimental)'));
+    switches.append(enabledLabel, autoLabel);
+
+    const list = make('ul', 'ytfc-list');
+    if (terms.length) {
+      terms.forEach((term, index) => {
+        const item = make('li');
+        item.append(make('span', 'ytfc-term', term));
+        const remove = make('button', 'ytfc-remove', 'Remover');
+        remove.type = 'button';
+        remove.onclick = async () => { terms.splice(index, 1); await set(STORE_TERMS, terms); renderPanel(); scan(); };
+        item.append(remove); list.append(item);
+      });
+    } else {
+      list.append(make('li', 'ytfc-term', 'Nenhum termo cadastrado ainda.'));
+    }
+
+    const status = make('p', 'ytfc-status', onSubscriptions()
+      ? 'Os títulos visíveis são analisados automaticamente.'
+      : 'Abra youtube.com/feed/subscriptions para analisar o feed.');
+    panel.replaceChildren(header, note, form, switches, list, status);
   }
 
   function videoId(card, anchor) {
