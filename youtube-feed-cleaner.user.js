@@ -2,7 +2,7 @@
 // @name         YouTube Feed Cleaner
 // @author       rodrigomescua
 // @namespace    https://github.com/rodrigomescua/youtube-feed-cleaner
-// @version      0.1.1
+// @version      0.1.2
 // @description  Gerencie termos e oculte vídeos correspondentes no feed de inscrições.
 // @homepageURL  https://github.com/rodrigomescua/youtube-feed-cleaner
 // @supportURL   https://github.com/rodrigomescua/youtube-feed-cleaner/issues
@@ -24,7 +24,7 @@
   const STORE_ENABLED = 'ytfc.enabled';
   const STORE_AUTO = 'ytfc.autoHide';
   const STORE_HIDDEN = 'ytfc.hiddenIds';
-  const STYLE_ID = 'ytfc-style';
+  const HOST_ID = 'ytfc-host';
   const PANEL_ID = 'ytfc-panel';
   const BUTTON_ID = 'ytfc-open';
   const VIDEO_SELECTOR = 'ytd-rich-item-renderer, ytd-video-renderer, ytd-grid-video-renderer';
@@ -50,8 +50,7 @@
   const escapeHtml = (s) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
   const onSubscriptions = () => location.pathname.startsWith('/feed/subscriptions');
 
-  function styles() {
-    if (document.getElementById(STYLE_ID)) return;
+  function styles(root) {
     const css = `
       #${BUTTON_ID}{position:fixed;right:22px;bottom:22px;z-index:99999;border:0;border-radius:999px;padding:12px 17px;background:#8ab4f8;color:#101114;font:600 14px Roboto,Arial;box-shadow:0 4px 18px #0006;cursor:pointer}
       #${PANEL_ID}{position:fixed;right:22px;bottom:78px;z-index:99999;width:min(370px,calc(100vw - 32px));max-height:min(75vh,680px);overflow:auto;box-sizing:border-box;padding:20px;border:1px solid #3c4048;border-radius:18px;background:#202124;color:#e8eaed;font:14px Roboto,Arial;box-shadow:0 12px 40px #0009}
@@ -62,23 +61,30 @@
       .ytfc-match{outline:2px solid #fbbc04!important;outline-offset:2px;border-radius:8px!important}
       .ytfc-inline{display:flex;gap:6px;flex-wrap:wrap;margin:7px 0}.ytfc-inline button{border:0;border-radius:8px;padding:7px 10px;background:#fbbc04;color:#202124;font-weight:600;cursor:pointer}
     `;
-    if (typeof GM_addStyle === 'function') GM_addStyle(css);
-    else { const style = document.createElement('style'); style.id = STYLE_ID; style.textContent = css; document.head.append(style); }
+    const style = document.createElement('style'); style.textContent = css; root.append(style);
   }
 
   function makePanel() {
-    if (document.getElementById(PANEL_ID)) return;
+    if (document.getElementById(HOST_ID)) return;
+    const host = document.createElement('div');
+    host.id = HOST_ID;
+    host.style.cssText = 'all:initial;position:fixed;inset:0;z-index:2147483647;pointer-events:none;';
+    const root = host.attachShadow({ mode: 'open' });
     const button = document.createElement('button');
     button.id = BUTTON_ID; button.type = 'button'; button.textContent = '✦ Limpar feed';
-    button.addEventListener('click', () => { const panel = document.getElementById(PANEL_ID); panel.hidden = !panel.hidden; renderPanel(); });
+    button.style.pointerEvents = 'auto';
+    button.addEventListener('click', () => { const panel = root.getElementById(PANEL_ID); panel.hidden = !panel.hidden; renderPanel(); });
     const panel = document.createElement('section');
     panel.id = PANEL_ID; panel.hidden = true; panel.setAttribute('aria-label', 'Gerenciador de termos');
-    document.body.append(button, panel);
+    panel.style.pointerEvents = 'auto';
+    root.append(button, panel);
+    styles(root);
+    document.body.append(host);
     renderPanel();
   }
 
   function renderPanel() {
-    const panel = document.getElementById(PANEL_ID);
+    const panel = document.getElementById(HOST_ID)?.shadowRoot?.getElementById(PANEL_ID);
     if (!panel) return;
     panel.innerHTML = `<div class="ytfc-head"><h2>Limpar feed</h2><button class="ytfc-icon" type="button" aria-label="Fechar">×</button></div>
       <p class="ytfc-note">Adicione palavras ou frases para encontrar vídeos pelo título no feed de inscrições.</p>
@@ -161,7 +167,7 @@
     terms = await get(STORE_TERMS, []); enabled = await get(STORE_ENABLED, true); autoHide = await get(STORE_AUTO, false); hiddenIds = await get(STORE_HIDDEN, []);
     if (!Array.isArray(terms)) terms = [];
     if (!Array.isArray(hiddenIds)) hiddenIds = [];
-    styles(); makePanel(); scan();
+    makePanel(); scan();
     new MutationObserver(scan).observe(document.documentElement, { childList: true, subtree: true });
     window.addEventListener('yt-navigate-finish', () => { renderPanel(); scan(); });
     window.addEventListener('popstate', scan);
