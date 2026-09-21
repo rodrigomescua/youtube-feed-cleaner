@@ -266,11 +266,11 @@
     }
     menu.click();
     await new Promise((resolve) => setTimeout(resolve, 350));
-    const item = menuItem('Não tenho interesse') || menuItem('Not interested');
+    const item = menuItem('Ocultar') || menuItem('Hide');
     if (!item) {
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
       autoHideInFlight.delete(card); if (!manual) autoHideFailed.add(card);
-      showToast(`Não encontrei “Não tenho interesse” para “${titleFor(card)}”.`, 'error'); return;
+      showToast(`Não encontrei “Ocultar” para “${titleFor(card)}”.`, 'error'); return;
     }
     const title = titleFor(card);
     item.click();
@@ -310,7 +310,7 @@
         if (autoHide) { card.querySelector('.ytfc-inline')?.remove(); hideVideo(card, id); return; }
         if (card.querySelector('.ytfc-inline')) return;
         const actions = document.createElement('div'); actions.className = 'ytfc-inline';
-        const hide = document.createElement('button'); hide.type = 'button'; hide.textContent = 'Ocultar do feed'; hide.title = 'Aciona “Não tenho interesse” no menu do YouTube';
+        const hide = document.createElement('button'); hide.type = 'button'; hide.textContent = 'Ocultar do feed'; hide.title = 'Aciona “Ocultar” no menu do YouTube';
         hide.onclick = () => hideVideo(card, id, true); actions.append(hide);
         const titleNode = card.querySelector('#details, #meta, h3') || anchor?.parentElement;
         titleNode?.append(actions);
