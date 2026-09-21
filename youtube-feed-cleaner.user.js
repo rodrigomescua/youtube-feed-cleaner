@@ -2,7 +2,7 @@
 // @name         YouTube Feed Cleaner
 // @author       rodrigomescua
 // @namespace    https://github.com/rodrigomescua/youtube-feed-cleaner
-// @version      0.1.11
+// @version      0.1.12
 // @description  Gerencie termos e oculte vídeos correspondentes no feed de inscrições.
 // @homepageURL  https://github.com/rodrigomescua/youtube-feed-cleaner
 // @supportURL   https://github.com/rodrigomescua/youtube-feed-cleaner/issues
@@ -54,6 +54,8 @@
   let feedbackTimer = 0;
   let autoHideInFlight = new WeakSet();
   let autoHideFailed = new WeakSet();
+  let autoHideScheduled = new WeakSet();
+  let autoHideQueue = Promise.resolve();
   const sectionDisplay = new WeakMap();
   const sectionStyleId = 'ytfc-visual-filter-style';
 
@@ -315,6 +317,19 @@
     if (manual) scan();
   }
 
+  function queueAutoHide(card, id) {
+    if (id && hiddenIds.includes(id)) return;
+    if (autoHideInFlight.has(card) || autoHideScheduled.has(card) || autoHideFailed.has(card)) return;
+    autoHideScheduled.add(card);
+    autoHideQueue = autoHideQueue.then(async () => {
+      autoHideScheduled.delete(card);
+      await hideVideo(card, id);
+    }).catch((error) => {
+      autoHideScheduled.delete(card);
+      console.error('[YouTube Feed Cleaner] Falha na fila de ocultação:', error);
+    });
+  }
+
   function scan() {
     if (scanTimer) return;
     scanTimer = window.setTimeout(() => {
@@ -332,7 +347,7 @@
         }
         matchCount += 1;
         card.classList.add('ytfc-match');
-        if (autoHide) { card.querySelector('.ytfc-inline')?.remove(); hideVideo(card, id); return; }
+        if (autoHide) { card.querySelector('.ytfc-inline')?.remove(); queueAutoHide(card, id); return; }
         if (card.querySelector('.ytfc-inline')) return;
         const actions = document.createElement('div'); actions.className = 'ytfc-inline';
         const hide = document.createElement('button'); hide.type = 'button'; hide.textContent = 'Ocultar do feed'; hide.title = 'Aciona “Ocultar” no menu do YouTube';
