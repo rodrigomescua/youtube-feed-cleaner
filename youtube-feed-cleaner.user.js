@@ -2,7 +2,7 @@
 // @name         YouTube Feed Cleaner
 // @author       rodrigomescua
 // @namespace    https://github.com/rodrigomescua/youtube-feed-cleaner
-// @version      0.1.12
+// @version      0.1.13
 // @description  Gerencie termos e oculte vídeos correspondentes no feed de inscrições.
 // @homepageURL  https://github.com/rodrigomescua/youtube-feed-cleaner
 // @supportURL   https://github.com/rodrigomescua/youtube-feed-cleaner/issues
@@ -274,7 +274,10 @@
   }
 
   function menuButton(card) {
-    return card.querySelector('ytd-menu-renderer yt-icon-button, ytd-menu-renderer #button, button[aria-label*="More"], button[aria-label*="Ações"]');
+    const legacyButton = card.querySelector('ytd-menu-renderer yt-icon-button, ytd-menu-renderer #button');
+    if (legacyButton) return legacyButton;
+    return [...card.querySelectorAll('button, [role="button"], yt-icon-button')]
+      .find((button) => /mais acoes|more actions|more options/.test(normalize(button.getAttribute('aria-label') || button.getAttribute('title'))));
   }
 
   function menuItem(label) {
