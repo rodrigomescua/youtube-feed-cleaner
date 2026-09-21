@@ -2,7 +2,7 @@
 // @name         YouTube Feed Cleaner
 // @author       rodrigomescua
 // @namespace    https://github.com/rodrigomescua/youtube-feed-cleaner
-// @version      0.1.7
+// @version      0.1.8
 // @description  Gerencie termos e oculte vídeos correspondentes no feed de inscrições.
 // @homepageURL  https://github.com/rodrigomescua/youtube-feed-cleaner
 // @supportURL   https://github.com/rodrigomescua/youtube-feed-cleaner/issues
@@ -30,8 +30,8 @@
   const HOST_ID = 'ytfc-host';
   const PANEL_ID = 'ytfc-panel';
   const BUTTON_ID = 'ytfc-open';
-  const VIDEO_SELECTOR = 'ytd-rich-item-renderer, ytd-video-renderer, ytd-grid-video-renderer';
-  const TITLE_SELECTOR = '#video-title, a#video-title-link';
+  const VIDEO_SELECTOR = 'ytd-rich-item-renderer, ytd-video-renderer, ytd-grid-video-renderer, yt-lockup-view-model';
+  const TITLE_SELECTOR = '#video-title, a#video-title-link, a.yt-lockup-metadata-view-model__title';
 
   const get = async (key, fallback) => {
     try {
@@ -236,8 +236,13 @@
     return id || card.getAttribute('data-video-id') || '';
   }
 
+  function titleAnchor(card) {
+    return card.querySelector(TITLE_SELECTOR)
+      || [...card.querySelectorAll('a[href*="/watch"]')].find((anchor) => (anchor.getAttribute('title') || anchor.textContent || '').trim());
+  }
+
   function titleFor(card) {
-    const title = card.querySelector(TITLE_SELECTOR);
+    const title = titleAnchor(card) || card.querySelector('h3');
     return (title?.getAttribute('title') || title?.textContent || '').trim();
   }
 
@@ -298,7 +303,7 @@
       let matchCount = 0;
       document.querySelectorAll(VIDEO_SELECTOR).forEach((card) => {
         const title = titleFor(card);
-        const anchor = card.querySelector(TITLE_SELECTOR);
+        const anchor = titleAnchor(card);
         const id = videoId(card, anchor);
         const matched = enabled && title && matchingTerm(title) && !(id && hiddenIds.includes(id));
         if (!matched) {
