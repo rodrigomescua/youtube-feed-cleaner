@@ -2,7 +2,7 @@
 // @name         YouTube Feed Cleaner
 // @author       rodrigomescua
 // @namespace    https://github.com/rodrigomescua/youtube-feed-cleaner
-// @version      0.1.5
+// @version      0.1.6
 // @description  Gerencie termos e oculte vídeos correspondentes no feed de inscrições.
 // @homepageURL  https://github.com/rodrigomescua/youtube-feed-cleaner
 // @supportURL   https://github.com/rodrigomescua/youtube-feed-cleaner/issues
@@ -291,8 +291,9 @@
   }
 
   function scan() {
-    clearTimeout(scanTimer);
+    if (scanTimer) return;
     scanTimer = window.setTimeout(() => {
+      scanTimer = 0;
       if (!onSubscriptions()) return;
       let matchCount = 0;
       document.querySelectorAll(VIDEO_SELECTOR).forEach((card) => {
